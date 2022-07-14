@@ -4,5 +4,7 @@
   "packagerPort": 19000,
   "expoServerNgrokUrl": "https://k2-g8q.anonymous.wordles.exp.direct",
   "packagerNgrokUrl": "https://k2-g8q.anonymous.wordles.exp.direct",
-  "ngrokPid": 15720
+  "ngrokPid": 14996,
+  "packagerPid": null,
+  "webpackServerPort": null
 }
