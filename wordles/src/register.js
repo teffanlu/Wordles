@@ -2,6 +2,7 @@ import React from "react";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StyleSheet, View, SafeAreaView, TextInput, Dimensions, Button, Text, Modal } from 'react-native';
+import axios from 'axios';
 
 const window = Dimensions.get("window");
 
@@ -14,8 +15,12 @@ export default function Register({ navigation }) {
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [codigo, setCodigo] = React.useState("");
+  const [newCodigo, setNewCodigo] = React.useState("");
   const [emptySpace, setEmptySpace] = React.useState(false);
   const [wrongPassword, setWrongPassword] = React.useState(false);
+  const [existName, setExistName] = React.useState(false);
+  const [existEmail, setExistEmail] = React.useState(false);
+  const [existPhone, setExistPhone] = React.useState(false);
   const [modalVisible, setModalVisible] = React.useState(false);
 
   async function finish () {
@@ -32,32 +37,34 @@ export default function Register({ navigation }) {
       return 0;
     }
 
-    try {
-      
-      /* var data = {name, userName, phoneNumber, gmail, password}
-      const response = await fetch(url, {
-        method: 'POST', // *GET, POST, PUT, DELETE, etc.
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
-      return response.json(); // parses JSON response into native JavaScript objects*/
+    //Comprobar si ya existe un usuario con ese nombre o email y el telefono
+    var response = await axios.post('https://wordles-server.herokuapp.com/api/users/gamer', {userName, phoneNumber, gmail});
 
-      /*
-      var user = JSON.stringify(response.data);
-      await AsyncStorage.setItem(
-        'User',
-        user
-      );
-      */
+    console.log(response.data[0][0], response.data[1][0], response.data[2][0]);
 
-      //JSON.stringify(
-      //JSON.parse(
-
-    } catch (error) {
-      console.log(error);
+    if(response.data[0][0]){
+      setExistName(true);
+      setExistPhone(false);
+      setExistEmail(false);
+      return 0;
     }
+    if(response.data[1][0]){
+      setExistPhone(true);
+      setExistName(false);
+      setExistEmail(false);
+      return 0;
+    }
+    if(response.data[2][0]){
+      setExistEmail(true);
+      setExistName(false);
+      setExistPhone(false);
+      return 0;
+    }
+
+    //Crear el codigo 
+    var res = await axios.post('https://wordles-server.herokuapp.com/api/users/createCodigo', {gmail});
+    console.log(res.data);
+    setNewCodigo(res.data[0].clave);
 
     /*setName('');
     setUserName('');
@@ -70,32 +77,29 @@ export default function Register({ navigation }) {
     setWrongPassword(false);
 
     setModalVisible(true);
-    
-    //navigation.navigate('Menu');
   }
 
   async function confirmCodigo () {
-    alert(name+'\n'+userName+'\n'+phoneNumber+'\n'+gmail+'\n'+password+'\n'+confirmPassword);
+    console.log(0.112358);
+    //Comprobar el codigo 
+    if(codigo === newCodigo){
+      console.log(0.112358);
+      //Crear el nuevo usuario
+      var response = await axios.post('https://wordles-server.herokuapp.com/api/users/newGamer', {name, userName, phoneNumber, gmail, password});
+      console.log(response.data[0]);
 
-    /* var data = {name, userName, phoneNumber, gmail, password}
-      const response = await fetch(url, {
-        method: 'POST', // *GET, POST, PUT, DELETE, etc.
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
-      return response.json(); // parses JSON response into native JavaScript objects*/
-
-      /*
-      var user = JSON.stringify(response.data);
+      var user = JSON.stringify(response.data[0]);
       await AsyncStorage.setItem(
         'User',
         user
       );
-      */
 
-    setModalVisible(!modalVisible);
+      setModalVisible(!modalVisible);
+    navigation.navigate('Menu');
+
+    } else {
+      alert('El codigo es incorrecto');
+    }
   }
 
   return (
@@ -107,6 +111,21 @@ export default function Register({ navigation }) {
       }
       { wrongPassword ?
         <Text style={styles.warning}>Las Contraseñas no coinciden</Text>
+        :
+        null
+      }
+      { existName ?
+        <Text style={styles.warning}>El Nombre de usuario que ingreso ya esta en uso</Text>
+        :
+        null
+      }
+      { existEmail ?
+        <Text style={styles.warning}>El Correo Electronico que ingreso ya esta en uso</Text>
+        :
+        null
+      }
+      { existPhone ?
+        <Text style={styles.warning}>El Numero de Telefono que ingreso ya esta en uso</Text>
         :
         null
       }

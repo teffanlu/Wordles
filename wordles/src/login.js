@@ -1,23 +1,70 @@
-import React from "react";
+import React, {useState} from "react";
+import axios from 'axios';
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, View, SafeAreaView, TextInput, Dimensions, Button } from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StyleSheet, View, SafeAreaView, TextInput, Dimensions, Button, Text } from 'react-native';
 
 const window = Dimensions.get("window");
 
 export default function Login({ navigation }) {
 
-  const [userName, setUserName] = React.useState("");
-  const [password, setPassword] = React.useState("");
+  const [userName, setUserName] = useState("");
+  const [password, setPassword] = useState("");
+  const [emptySpace, setEmptySpace] = useState(false);
+  const [wrongPassword, setWrongPassword] = useState(false);
+  const [notFound, set404] = useState(false);
 
   async function finish () {
-    alert(userName+'\n'+password);
-    navigation.navigate('Menu');
+    
+    if(userName === '' || password === ''){
+      setEmptySpace(true);
+      return 0;
+    }
+    setEmptySpace(false);
+
+    var response = await axios.post('https://wordles-server.herokuapp.com/api/users/gamer', {userName});
+    console.log(response.data[0]);
+
+    if(response.data[0] === undefined){
+      set404(true);
+      return 0;
+    }
+    set404(false);
+
+    if(response.data[0].password != password){
+      setWrongPassword(true);
+      return 0;
+    }
+    setWrongPassword(false);
+
+    var user = JSON.stringify(response.data[0]);
+    await AsyncStorage.setItem(
+      'User',
+      user
+    );
+
     setUserName('');
     setPassword('');
+    navigation.navigate('Menu');
   }
 
   return (
     <View style={styles.container}>
+      { emptySpace ?
+        <Text style={styles.warning}>Hay algun campo Vacio, rellene todos los campos</Text>
+        :
+        null
+      }
+      { wrongPassword ?
+        <Text style={styles.warning}>Contraseña incorrecta</Text>
+        :
+        null
+      }
+      { notFound ?
+        <Text style={styles.warning}>Usuario no encontrado</Text>
+        :
+        null
+      }
       <SafeAreaView>
         <TextInput
           placeholder="Nombre de Usuario"
@@ -56,7 +103,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'center',
+    padding: 100,
   },
   input: {
     width: window.width*0.9,
@@ -73,5 +120,8 @@ const styles = StyleSheet.create({
     width: window.width*0.9,
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  warning: {
+    color: 'red',
   },
 });
