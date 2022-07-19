@@ -17,8 +17,10 @@ const Stack = createStackNavigator();
 import Register from "./src/register";
 import Login from "./src/login";
 import Profile from "./src/profile";
-import Rules from "./src/rules";
 import Menu from "./src/menu";
+import CreateRoom from "./src/createRoom";
+import Play from "./src/play";
+import Statistic from "./src/statistic";
 
 function LogoPerfil({ navigation }) {
   return (
@@ -67,20 +69,33 @@ function MenuRoute({ navigation }) {
           }}  
         />
         <Stack.Screen
-          name="Rules"
-          component={Rules}
-          options={{
-            title: 'Reglas del juego',
-            headerRight: () => LogoPerfil({ navigation }),
-          }}  
-        />
-        <Stack.Screen
           name="Menu"
           component={Menu}
           options={{
             title: 'Menu de opciones',
             headerLeft: null,
             headerRight: () => LogoPerfil({ navigation }),
+          }}  
+        />
+        <Stack.Screen
+          name="Room"
+          component={CreateRoom}
+          options={{
+            title: 'Agregar Room',
+          }}  
+        />
+        <Stack.Screen
+          name="Play"
+          component={Play}
+          options={{
+            title: 'Jugar Room',
+          }}  
+        />
+        <Stack.Screen
+          name="Statistic"
+          component={Statistic}
+          options={{
+            title: 'Puntuacion',
           }}  
         />
       </Stack.Navigator>

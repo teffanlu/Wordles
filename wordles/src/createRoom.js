@@ -1,20 +1,19 @@
 import React from "react";
+import axios from "axios";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, SafeAreaView, TextInput, Dimensions, Button } from 'react-native';
 
 const window = Dimensions.get("window");
 
-export default function Rules({ navigation }) {
+export default function CreateRoom({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text>Reglas del juego.</Text>
-      <View style={styles.boton}>
-          <Button
-            title="Volver al menu"
-            onPress={() => navigation.navigate('Menu')}
-          />
-        </View>
+      <Text>Hola mundo</Text>
+      <Button
+        title="Go to back"
+        onPress={() => navigation.navigate('Menu')}
+      />
       <StatusBar style="auto" />
     </View>
   );
@@ -26,10 +25,5 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    boton: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      marginTop: 40,
     },
 });

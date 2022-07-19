@@ -2,6 +2,8 @@ import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, View, Dimensions, Button } from 'react-native';
 
+import Invitation from './utils/invitation';
+
 const window = Dimensions.get("window");
 
 export default function Menu({ navigation }) {
@@ -11,20 +13,20 @@ export default function Menu({ navigation }) {
       <View style={styles.buton}>
         <Button
             title="Agregar Room"
-            onPress={() => alert("Agregar Room")}
+            onPress={() => navigation.navigate('Room')}
         />
       </View>
       <View style={styles.buton}>
         <Button
             title="Jugar Room"
-            onPress={() => alert("Jugar Room")}
+            onPress={() => navigation.navigate('Play')}
         />
       </View>
       <View style={styles.buton}>
         <Button
-            title="Reglas del JUego"
+            title="Invitar a un amigo"
             color="#a0a0a0"
-            onPress={() => navigation.navigate('Rules')}
+            onPress={() => Invitation()}
         />
       </View>
       <StatusBar style="auto" />
