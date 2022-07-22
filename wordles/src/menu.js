@@ -13,7 +13,7 @@ export default function Menu({ navigation }) {
       <View style={styles.buton}>
         <Button
             title="Agregar Room"
-            onPress={() => navigation.navigate('Room')}
+            onPress={() => navigation.navigate('Room', {word: 0})} /////////////////////////////////////////////////////////////////
         />
       </View>
       <View style={styles.buton}>

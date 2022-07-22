@@ -26,6 +26,12 @@ export default function Profile({ navigation }) {
     }
     getUser();
     console.log(user);
+
+    /*
+    var response = await axios.get('https://wordles-server.herokuapp.com/api/info/roomsGamer/'+user.id);
+    console.log(response.data[0]);
+    */
+
   }, [reload]);
 
   async function logout () {
@@ -41,6 +47,7 @@ export default function Profile({ navigation }) {
       
       await axios.delete('https://wordles-server.herokuapp.com/api/users/gamer/'+user.id);
       alert('Usuario eliminado con exito');
+      await AsyncStorage.removeItem('User');
       navigation.navigate('Registro');
 
     }

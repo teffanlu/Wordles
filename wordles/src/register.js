@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState, useEffect} from "react";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StyleSheet, View, SafeAreaView, TextInput, Dimensions, Button, Text, Modal } from 'react-native';
@@ -8,20 +8,33 @@ const window = Dimensions.get("window");
 
 export default function Register({ navigation }) {
 
-  const [name, setName] = React.useState("");
-  const [userName, setUserName] = React.useState("");
-  const [phoneNumber, setPhoneNumber] = React.useState("");
-  const [gmail, setGmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [confirmPassword, setConfirmPassword] = React.useState("");
-  const [codigo, setCodigo] = React.useState("");
-  const [newCodigo, setNewCodigo] = React.useState("");
-  const [emptySpace, setEmptySpace] = React.useState(false);
-  const [wrongPassword, setWrongPassword] = React.useState(false);
-  const [existName, setExistName] = React.useState(false);
-  const [existEmail, setExistEmail] = React.useState(false);
-  const [existPhone, setExistPhone] = React.useState(false);
-  const [modalVisible, setModalVisible] = React.useState(false);
+  const [name, setName] = useState("");
+  const [userName, setUserName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [gmail, setGmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [codigo, setCodigo] = useState("");
+  const [newCodigo, setNewCodigo] = useState("");
+  const [emptySpace, setEmptySpace] = useState(false);
+  const [wrongPassword, setWrongPassword] = useState(false);
+  const [existName, setExistName] = useState(false);
+  const [existEmail, setExistEmail] = useState(false);
+  const [existPhone, setExistPhone] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [reload, setreload] = useState(false);
+  const [user, setUser] = useState('');
+  
+  useEffect(() => {
+    async function getUser(){
+      let getuser = await AsyncStorage.getItem('User');
+      setUser(JSON.parse(getuser));
+    }
+    getUser();
+    if(user !== undefined){
+      navigation.navigate('Menu');
+    }
+  }, [reload]);
 
   async function finish () {
   
@@ -193,6 +206,7 @@ export default function Register({ navigation }) {
             <Text style={styles.modalText}>Ingresa el codigo enviado a tu Correo</Text>
             <TextInput
               placeholder="Codigo"
+              keyboardType="numeric"
               style={styles.input}
               onChangeText={setCodigo}
               value={codigo}
