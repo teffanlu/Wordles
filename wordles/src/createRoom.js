@@ -11,8 +11,11 @@ export default function CreateRoom({ navigation, route }) {
   const [word, setWord] = useState("");
   const [turns, setTurns] = useState("5");
   const [limitTime, setLimitTime] = useState("1");
+  const [emptySpace, setEmptySpace] = useState(false);
   const [reload, setreload] = useState(false);
   const [user, setUser] = useState('');
+
+  const [wordId, setWordId] = useState(route.params.word);
   
   useEffect(() => {
     async function getUser(){
@@ -22,13 +25,27 @@ export default function CreateRoom({ navigation, route }) {
     getUser();
     console.log(user);
 
-    if(route.params.word !== 0){ //////////////////////////////////////////////////////////////////////////////////////////
-      //get word
+    async function getWordToUpdate() {
+      var response = await axios.get('https://wordles-server.herokuapp.com/api/info/room/'+wordId);
+      setWord(response.data[0].word);
+      setTurns(response.data[0].turns);
+      setLimitTime(response.data[0].limitTime);
     }
+    if(wordId !== 0){ 
+      getWordToUpdate();
+    }
+    
   }, [reload]);
 
-  async function createWord () { ////////////////////////////////////////////////////////////////////////////////////////////
-    if(false){
+  async function createWord () {
+
+    if(word === "" || turns === "" || limitTime === ""){
+      setEmptySpace(true);
+      return 0;
+    }
+    setEmptySpace(false);
+
+    if(true){
       var response = await axios.post('https://wordles-server.herokuapp.com/api/info/room', {
         word, 
         turns, 
@@ -36,23 +53,46 @@ export default function CreateRoom({ navigation, route }) {
         gamer_id: user.id
       });
       console.log(response.data[0]);
+      alert("Room creado exitosamente");
+      setWordId(response.data[0].id);
     }
   }
 
-  async function updateWord () { ////////////////////////////////////////////////////////////////////////////////////////////
-    if(false){
-      var response = await axios.put('https://wordles-server.herokuapp.com/api/info/room/'+0/*word.id*/, {
+  async function updateWord () { 
+
+    if(word === "" || turns === "" || limitTime === ""){
+      setEmptySpace(true);
+      return 0;
+    }
+    setEmptySpace(false);
+
+    if(true){
+      var response = await axios.put('https://wordles-server.herokuapp.com/api/info/room/'+wordId, {
         word, 
         turns, 
-        limitTime, 
-        gamer_id: user.id
+        limitTime
       });
       console.log(response.data[0]);
+      alert("Room actualizado exitosamente");
     }
+  }
+
+  async function deleteWord () {
+    setWordId(0);
+    setWord("");
+    setTurns("5");
+    setLimitTime("1");
+    await axios.delete('https://wordles-server.herokuapp.com/api/info/room/'+wordId);
+    alert("Room eliminado exitosamente");
   }
 
   return (
     <View style={styles.container}>
+      { emptySpace ?
+        <Text style={styles.warning}>Hay algun campo Vacio, rellene todos los campos</Text>
+        :
+        null
+      }
       <SafeAreaView>
         <Text>Palabra:</Text>
         <TextInput
@@ -88,10 +128,25 @@ export default function CreateRoom({ navigation, route }) {
       </SafeAreaView>
       <View style={styles.br}></View>
       <View style={styles.br}></View>
-      <Button
-        title="Crear"
-        onPress={() => createWord()}
-      />
+      { wordId !== 0 ?
+      <View>
+          <Button
+            title="Actualizar"
+            onPress={() => updateWord()}
+          />
+          <View style={styles.br}></View>
+          <Button
+            title="Eliminar"
+            color="red"
+            onPress={() => deleteWord()}
+          />
+        </View>
+      :
+        <Button
+          title="Crear"
+          onPress={() => createWord()}
+        />
+      }
       <StatusBar style="auto" />
     </View>
   );
@@ -120,5 +175,8 @@ const styles = StyleSheet.create({
     },
     br: {
       margin: 20,
+    },
+    warning: {
+      color: 'red',
     },
 });

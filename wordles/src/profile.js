@@ -27,11 +27,6 @@ export default function Profile({ navigation }) {
     getUser();
     console.log(user);
 
-    /*
-    var response = await axios.get('https://wordles-server.herokuapp.com/api/info/roomsGamer/'+user.id);
-    console.log(response.data[0]);
-    */
-
   }, [reload]);
 
   async function logout () {
@@ -67,9 +62,9 @@ export default function Profile({ navigation }) {
 
       <View >
         <Text style={styles.title}>Estadisticas del Jugador:</Text>
-        <Text>Puntuacion total  {'->'} {user.totalPoints}</Text>
-        <Text>Racha ganadora   {'->'} {user.winStreak}</Text>
-        <Text>Racha actual        {'->'} {user.currentStreak}</Text>
+        <Text>Puntuacion total  {'->'} {user.totalPoints === null ? "Aun sin datos" : user.totalPoints}</Text>
+        <Text>Racha ganadora   {'->'} {user.winStreak === null ? "Aun sin datos" : user.winStreak}</Text>
+        <Text>Racha actual        {'->'} {user.currentStreak === null ? "Aun sin datos" : user.currentStreak}</Text>
 
         <View style={styles.separator} />
 
