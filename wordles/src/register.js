@@ -23,17 +23,17 @@ export default function Register({ navigation }) {
   const [existPhone, setExistPhone] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [reload, setreload] = useState(false);
-  const [user, setUser] = useState('');
   
   useEffect(() => {
     async function getUser(){
       let getuser = await AsyncStorage.getItem('User');
-      setUser(JSON.parse(getuser));
+
+      if(JSON.parse(getuser) !== null){
+        navigation.navigate('Menu');
+      }
     }
     getUser();
-    if(user !== undefined){
-      navigation.navigate('Menu');
-    }
+
   }, [reload]);
 
   async function finish () {

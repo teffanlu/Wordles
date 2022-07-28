@@ -45,6 +45,14 @@ export default function CreateRoom({ navigation, route }) {
     }
     setEmptySpace(false);
 
+     //comprobar si solo existen letras del abcdario
+    const pattern = new RegExp('ñ|^[A-Z]+$', 'i');
+
+    if(!pattern.test(word)){
+      alert("Solo debe ingresar caracteres correspondiente al abecedario, y sin tildes.");
+      return 0;
+    }
+
     if(true){
       var response = await axios.post('https://wordles-server.herokuapp.com/api/info/room', {
         word, 
@@ -65,6 +73,14 @@ export default function CreateRoom({ navigation, route }) {
       return 0;
     }
     setEmptySpace(false);
+
+    //comprobar si solo existen letras del abcdario
+    const pattern = new RegExp('^[A-Z]+$', 'i');
+
+    if(!pattern.test(word)){
+      alert("Solo debe ingresar caracteres correspondiente al abecedario, y sin tildes.");
+      return 0;
+    }
 
     if(true){
       var response = await axios.put('https://wordles-server.herokuapp.com/api/info/room/'+wordId, {

@@ -22,6 +22,7 @@ import CreateRoom from "./src/createRoom";
 import Play from "./src/play";
 import Statistic from "./src/statistic";
 import ListWords from "./src/listWords";
+import Ranking from "./src/ranking";
 
 function LogoPerfil({ navigation }) {
   return (
@@ -91,6 +92,14 @@ function MenuRoute({ navigation }) {
           component={ListWords}
           options={{
             title: 'Lista de Rooms',
+            headerRight: () => LogoPerfil({ navigation }),
+          }}  
+        />
+        <Stack.Screen
+          name="Ranking"
+          component={Ranking}
+          options={{
+            title: 'Ranking',
             headerRight: () => LogoPerfil({ navigation }),
           }}  
         />

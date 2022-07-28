@@ -6,23 +6,28 @@ import { StyleSheet, Text, View, Dimensions, Button, FlatList, SafeAreaView, Tou
 
 const window = Dimensions.get("window");
 
-const Item = ({ word, onPress }) => (
-    <TouchableOpacity onPress={onPress} style={styles.item}>
-      <Text style={styles.title}>{word}</Text>
+const Item = ({ item }) => (
+    <TouchableOpacity style={styles.item}>
+      <Text style={[styles.title, styles.bold]}>{"#"+"num"+": "+ item.userName}</Text>
+      <Text style={styles.title}>
+        Puntaje: {item.totalPoints === null ? "Sin Puntaje" : item.totalPoints} 
+        {"\n"}
+        Racha actual: {item.currentStreak === null ? "Sin Puntaje" : item.currentStreak}
+      </Text>
     </TouchableOpacity>
   );
 
-export default function ListWords ({ navigation }) {
+export default function Ranking ({ navigation }) {
 
   const [reload, setreload] = useState(false);
-  const [listwors, setListwors] = useState([]);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     async function getUser(){
-      let getuser = await AsyncStorage.getItem('User');
 
-      var response = await axios.get('https://wordles-server.herokuapp.com/api/info/roomsGamer/'+JSON.parse(getuser).id);
-      setListwors(response.data);
+      var response = await axios.get('https://wordles-server.herokuapp.com/api/users/gamers');
+      setUsers(response.data);
+      console.log(response.data);
     }
     getUser();
 
@@ -31,19 +36,17 @@ export default function ListWords ({ navigation }) {
   const renderItem = ({ item }) => {
     return (
       <Item
-        word={item.word}
-        onPress={() => navigation.navigate('Room', {word: item.id})}
+        item={item}
       />
     );
   };
 
   return (
     <View style={styles.container}>
-      <Text>Lista de palabras creadas por mi:</Text>
 
       <SafeAreaView style={styles.containerList}>
         <FlatList
-            data={listwors}
+            data={users}
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
         />
@@ -79,5 +82,8 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 22,
         color: "white"
+    },
+    bold: {
+      fontWeight: "bold",
     },
 });

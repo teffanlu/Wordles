@@ -12,6 +12,12 @@ export default function Menu({ navigation }) {
     <View style={styles.container}>
       <View style={styles.buton}>
         <Button
+            title="Jugar Room"
+            onPress={() => navigation.navigate('Play')}
+        />
+      </View>
+      <View style={styles.buton}>
+        <Button
             title="Agregar Room"
             onPress={() => navigation.navigate('Room', {word: 0})}
         />
@@ -24,8 +30,8 @@ export default function Menu({ navigation }) {
       </View>
       <View style={styles.buton}>
         <Button
-            title="Jugar Room"
-            onPress={() => navigation.navigate('Play')}
+            title="Ver ranking global"
+            onPress={() => navigation.navigate('Ranking')}
         />
       </View>
       <View style={styles.buton}>
