@@ -8,13 +8,18 @@ const window = Dimensions.get("window");
 
 export default function Play({ navigation }) {
 
-  const [text, onChangeText] = useState("amarillo");
+  const [text, onChangeText] = useState("");
   const [length, setLength] = useState('');
   const [reload, setreload] = useState(false);
-  const abc = [
-    {caracter:'Q', color:"#32CD32"},
-    {caracter:'W', color:"#a0a0a0"},
-    {caracter:'E', color:"gold"},
+  const [array, setArray] = useState([]);
+  const [turns, setTurns] = useState([]);
+  const [count, setCount] = useState(0);
+
+  var arrayTurns = [];
+  var abc = [
+    {caracter:'Q'},
+    {caracter:'W'},
+    {caracter:'E'},
     {caracter:'R'},
     {caracter:'T'},
     {caracter:'Y'},
@@ -42,25 +47,49 @@ export default function Play({ navigation }) {
   ];
 
   useEffect(() => {
-    async function getWordToUpdate() {
 
+    setArray(abc);
+
+    async function getWordToUpdate() {
       let getuser = await AsyncStorage.getItem('User');
 
-      var respons = await axios.get('https://wordles-server.herokuapp.com/api/info/rooms');
-      console.log(respons);
+      var rooms = await axios.get('https://wordles-server.herokuapp.com/api/info/rooms');
+      console.log(rooms.data);
 
-      var respons = await axios.post('https://wordles-server.herokuapp.com/api/info/statistics', {
+      var statistics = await axios.post('https://wordles-server.herokuapp.com/api/info/statistics', {
         gamer_id: getuser.id
       });
-      console.log(respons);
+      console.log(statistics.data);
 
-      setLength(text);
+      //Identificar cuales palabras no se han jugado para guardarlas en una lista y luego elegir una aleatoria
+      var unplayedWords = rooms.data;
+
+        for (let i = 0; i < statistics.data.length; i++) {
+          
+          for (let j = 0; j < rooms.data.length; j++) {
+            
+            console.log(rooms.data[j].id, statistics.data[i].id);
+
+            if(rooms.data[j].id === statistics.data[i].id){
+              unplayedWords.splice(j,1);
+            }
+
+          }
+        }
+
+      //Obtener un indice de array aleatorio
+      let indexWord = Math.trunc(Math.random() * (unplayedWords.length - 0) + 0);
+      console.log(indexWord);
+
+      console.log(unplayedWords[indexWord].word);
+      onChangeText(unplayedWords[indexWord].word);
+      setLength(unplayedWords[indexWord].word);
     } 
     getWordToUpdate();
 
   }, [reload]);
 
-  function onfinish () {
+  async function onfinish () {
 
     //Obtengo todos los caracteres tecleados despues de la palabra buscada
     let word = text.slice(length.length, text.length);
@@ -80,7 +109,7 @@ export default function Play({ navigation }) {
       list.splice(word[i][0], 1, word[i][1]);
     }
 
-    let textString = list.toString().replace(/,/g,"");
+    var textString = list.toString().replace(/,/g,"");
     console.log(textString)
 
     //comprobar si solo existen letras del abcdario
@@ -101,43 +130,70 @@ export default function Play({ navigation }) {
       alert("Correcto!!!");
     }
 
+    //Guardar el cambio anterior en la lista de abcdario
+    if(count > 0){
+      abc = array;
+    }
+    
     // pintar las casillas de abcdario del color correspondiente
+    var color = {color: ''};
+    var repit = length.toUpperCase().split('');
+    for (let i = 0; i < length.length; i++) {
+
+      //Extraer la letra tecleada 
+      const result = abc.filter(word => word.caracter === textString[i].toUpperCase());
+
+      //Borrar si no encuentro solucion
+      /*//extraer index para cambiar letra por 0
+      const index = (element) => element === textString[i].toUpperCase();
+      repit[repit.findIndex(index)] = 0;
+      console.log(repit);*/
+
+      //identificar si existe en la palabra buscada
+      const exist = length.split('').filter(word => word.toUpperCase() === textString[i].toUpperCase());
+
+        //Existe y estaa en la posicion correcta #VERDE
+        if(exist[0] && length[i].toUpperCase() === textString[i].toUpperCase()){
+          color = {color: '#32CD32'};
+        }
+
+        //Existe pero en la posicion incorrecta #GOLD
+        if(exist[0] &&  length[i].toUpperCase() !== textString[i].toUpperCase()){
+          color = {color: 'gold'};
+        }
+
+        //No existe en la palabra #GRAY
+        if(!exist[0]){
+          color = {color: "#a0a0a0"};
+        }
+
+        arrayTurns = [...arrayTurns, {...result[0], ...color}];       
+    }
+
+    console.log(abc);
+    setCount(count + 1);
+    setArray(abc);
+    setTurns([arrayTurns, ...turns]);
+
+    console.log(turns);
     // post
   }
 
   return (
     <View style={styles.container}>
-
-      <View style={[styles.marginB, styles.row]}>
-        { 
-          abc.map((element, index) =>
-            <Text
-              key={index}
-              style={[styles.input, {backgroundColor: element.color}]}
-            >
-              {element.caracter}
-              { ( index % 6 ) == 0 ?
-                  "\n"
-                :
-                  null
-              }
-            </Text>
-          )
-        }
-      </View>
       <View style={styles.marginB}></View>
 
       <SafeAreaView>
         <View style={[styles.row, styles.marginB]}>
-        { length.split('').map((element, index) =>
-            <TextInput
-              key={index}
-              style={styles.input}
-              onChangeText={(e) => onChangeText([...text, [index, e]])} //Guardo despues de la palabra buscada todos los caracteres que se teclean con el indice al cual corresponde
-              maxLength={1}
-            />
-          )
-        }
+          { length.split('').map((element, index) => 
+              <TextInput
+                key={index}
+                style={styles.input}
+                onChangeText={(e) => onChangeText([...text, [index, e]])} //Guardo despues de la palabra buscada todos los caracteres que se teclean con el indice al cual corresponde
+                maxLength={1}
+              />
+            )
+          }
         </View>
       </SafeAreaView>
 
@@ -145,6 +201,27 @@ export default function Play({ navigation }) {
         title="Comprovar"
         onPress={() => onfinish()}
       />
+
+      <View style={styles.marginB}></View>
+      <View style={styles.marginB}></View>
+
+      <Text>Intento #{count}:</Text>
+      { turns.map((element, index) => 
+        <View style={[styles.marginB, styles.row]}>
+          { 
+          //abc
+            turns[index].map((element, i) =>
+              <Text
+                key={i}
+                style={[styles.input, {backgroundColor: element.color}]}
+              >
+                {element.caracter}
+              </Text>
+            )
+          }
+        </View>
+        )
+      }
       <StatusBar style="auto" />
     </View>
   );
