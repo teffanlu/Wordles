@@ -1,0 +1,5 @@
+compartir palabra creada. poner id en alguna parte visible. y tener un buscador por id
+
+Asignar puntaje al jugador en caso de abandono, ganar y bla bla bla
+
+borrar registro de la base de datos y pruebas.

@@ -10,10 +10,21 @@ export default function Play({ navigation }) {
 
   const [text, onChangeText] = useState("");
   const [length, setLength] = useState('');
+  const [wordd, setWord] = useState(0);
+  const [user, setUser] = useState(0);
   const [reload, setreload] = useState(false);
   const [array, setArray] = useState([]);
   const [turns, setTurns] = useState([]);
   const [count, setCount] = useState(0);
+  const [timer, setTimer] = useState('00:00');
+  const [wordCorrect, setWordCorrect] = useState(0);
+  const [end, setEnd] = useState(false);
+
+  var id = null;
+
+  //wordId and userId
+  var wId = 0;
+  var uId = 0;
 
   var arrayTurns = [];
   var abc = [
@@ -51,15 +62,16 @@ export default function Play({ navigation }) {
     setArray(abc);
 
     async function getWordToUpdate() {
-      let getuser = await AsyncStorage.getItem('User');
+      var getuser = await AsyncStorage.getItem('User');
+      setUser(JSON.parse(getuser));
+      uId = JSON.parse(getuser).id;
 
       var rooms = await axios.get('https://wordles-server.herokuapp.com/api/info/rooms');
-      console.log(rooms.data);
 
       var statistics = await axios.post('https://wordles-server.herokuapp.com/api/info/statistics', {
-        gamer_id: getuser.id
+        gamer_id: JSON.parse(getuser).id
       });
-      console.log(statistics.data);
+      console.log(JSON.parse(getuser).id, statistics.data);
 
       //Identificar cuales palabras no se han jugado para guardarlas en una lista y luego elegir una aleatoria
       var unplayedWords = rooms.data;
@@ -67,15 +79,18 @@ export default function Play({ navigation }) {
         for (let i = 0; i < statistics.data.length; i++) {
           
           for (let j = 0; j < rooms.data.length; j++) {
-            
-            console.log(rooms.data[j].id, statistics.data[i].id);
 
-            if(rooms.data[j].id === statistics.data[i].id){
+            if(rooms.data[j].id === statistics.data[i].word_id){
               unplayedWords.splice(j,1);
             }
 
           }
         }
+
+      if(unplayedWords.length === 0){
+        alert("Ya ha jugado todos los rooms, intentelo mas tarde");
+        navigation.navigate('Menu');
+      }else{
 
       //Obtener un indice de array aleatorio
       let indexWord = Math.trunc(Math.random() * (unplayedWords.length - 0) + 0);
@@ -83,13 +98,95 @@ export default function Play({ navigation }) {
 
       console.log(unplayedWords[indexWord].word);
       onChangeText(unplayedWords[indexWord].word);
+      setWord(unplayedWords[indexWord]);
       setLength(unplayedWords[indexWord].word);
+      wId = unplayedWords[indexWord];
+
+      //Iniciar contador
+      startTimer(unplayedWords[indexWord].limitTime + ':00');
+
+      }
     } 
     getWordToUpdate();
 
+    //componentWillUnmount
+    return () => { 
+
+      alert('Fue asignado cero puntos a este Room, por abandono');
+      forcedFinish(0);
+
+    }
+
   }, [reload]);
 
+  async function forcedFinish(r) {  
+
+    setEnd(false);
+    clearInterval(id);
+
+    console.log(wId.limitTime + ':00', count+1, wId.id, uId);
+    var statistics = await axios.post('https://wordles-server.herokuapp.com/api/info/createStatistic', {
+      totalPoints: 0, 
+      totalTime: wId.limitTime + ':00', 
+      totalTurns: count+1, 
+      word_id: wId.id, 
+      gamer_id: uId
+    });
+    console.log(statistics);
+
+    if(r === 1)
+      setreload(!reload);
+  }
+
+  function startTimer(Inictime) {
+
+      let time = Inictime.split(':');
+      let minutes = parseInt(time[0]);
+      let seconds = parseInt(time[1]);
+
+      console.log(minutes, seconds);
+
+      //ciclo infinito
+      let condition = false;
+      do {
+        id = setInterval(() => {
+          if(!condition){
+
+            if(seconds > 0){
+              seconds -= 1;
+            }
+
+            if(seconds === 0){
+              if(minutes > 0){
+                minutes -= 1;
+                seconds = 59;
+              }
+              if(minutes === 0){
+                if(seconds === 0){
+                  setEnd(true);
+                  alert("Tiempo agotado");
+                  condition = true;
+                  return 0;
+                }
+              }
+            }
+
+            setTimer(
+              (minutes > 9 ? minutes : '0' + minutes) + ':'
+              + (seconds > 9 ? seconds : '0' + seconds)
+            );
+          }
+        }, 1000);
+      
+    } while (condition);
+  }
+
   async function onfinish () {
+
+    if(parseInt(wordd.turns) == count+1){
+      alert('Ya no hay mas intentos');
+      setEnd(true);
+    }
 
     //Obtengo todos los caracteres tecleados despues de la palabra buscada
     let word = text.slice(length.length, text.length);
@@ -126,8 +223,11 @@ export default function Play({ navigation }) {
       return 0;
     }
 
+    //Juego terminado satisfactoriamente
     if(textString.toUpperCase() === length.toUpperCase()){
       alert("Correcto!!!");
+      setEnd(true);
+      postResult();
     }
 
     //Guardar el cambio anterior en la lista de abcdario
@@ -143,18 +243,13 @@ export default function Play({ navigation }) {
       //Extraer la letra tecleada 
       const result = abc.filter(word => word.caracter === textString[i].toUpperCase());
 
-      //Borrar si no encuentro solucion
-      /*//extraer index para cambiar letra por 0
-      const index = (element) => element === textString[i].toUpperCase();
-      repit[repit.findIndex(index)] = 0;
-      console.log(repit);*/
-
       //identificar si existe en la palabra buscada
       const exist = length.split('').filter(word => word.toUpperCase() === textString[i].toUpperCase());
 
         //Existe y estaa en la posicion correcta #VERDE
         if(exist[0] && length[i].toUpperCase() === textString[i].toUpperCase()){
           color = {color: '#32CD32'};
+          setWordCorrect(wordCorrect + 1);
         }
 
         //Existe pero en la posicion incorrecta #GOLD
@@ -170,18 +265,39 @@ export default function Play({ navigation }) {
         arrayTurns = [...arrayTurns, {...result[0], ...color}];       
     }
 
-    console.log(abc);
     setCount(count + 1);
     setArray(abc);
     setTurns([arrayTurns, ...turns]);
 
-    console.log(turns);
-    // post
+  }
+
+  async function postResult () {
+
+    let timerNow = timer;
+    let time = timerNow.split(':');
+    let minutes = parseInt(time[0]);
+
+    // longitud de la palabra al cuadradro + minutos+1*10 - intentos+1*10 + letras acertadas*2
+    let totalPoints = length.length*length.length + (minutes + 1) * 10 - (count+1) * 10 + wordCorrect * 2;
+
+    console.log(totalPoints, timerNow, count+1, wordd.id, user.id);
+
+    var statistics = await axios.post('https://wordles-server.herokuapp.com/api/info/createStatistic', {
+      totalPoints, 
+      totalTime: timerNow, 
+      totalTurns: count+1, 
+      word_id: wordd.id, 
+      gamer_id: user.id
+    });
+    console.log(statistics.data);
+
+    alert('Tu puntaje en este room fue: '+ totalPoints);
+
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.marginB}></View>
+      <View style={styles.marginB}><Text>{timer}</Text></View>
 
       <SafeAreaView>
         <View style={[styles.row, styles.marginB]}>
@@ -197,15 +313,22 @@ export default function Play({ navigation }) {
         </View>
       </SafeAreaView>
 
+    { end ?
+      <Button
+        title="Siguiente"
+        onPress={() => forcedFinish(1)}
+      />
+      :
       <Button
         title="Comprovar"
         onPress={() => onfinish()}
       />
-
+    }
+      
       <View style={styles.marginB}></View>
       <View style={styles.marginB}></View>
 
-      <Text>Intento #{count}:</Text>
+      <Text>Intento #{count} de {wordd.turns} intentos</Text>
       { turns.map((element, index) => 
         <View style={[styles.marginB, styles.row]}>
           { 

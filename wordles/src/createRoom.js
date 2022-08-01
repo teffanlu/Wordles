@@ -45,6 +45,31 @@ export default function CreateRoom({ navigation, route }) {
     }
     setEmptySpace(false);
 
+    if(word.length > 20){
+      alert('La palabra debe tener maxino 20 letras');
+      return 0;
+    }
+
+    if(word.length < 3){
+      alert('La palabra debe tener minimo tres letras');
+      return 0;
+    }
+
+    if(parseInt(limitTime) > 30){
+      alert('El limite de tiempo no puede ser mayor a 30 minutos');
+      return 0;
+    }
+
+    if(parseInt(limitTime) < 1){
+      alert('El limite de tiempo no puede ser menor a 1 minutos');
+      return 0;
+    }
+
+    if(parseInt(turns) < 2){
+      alert('El numero de intentos tiene que ser minimo de dos');
+      return 0;
+    }
+
      //comprobar si solo existen letras del abcdario
     const pattern = new RegExp('ñ|^[A-Z]+$', 'i');
 

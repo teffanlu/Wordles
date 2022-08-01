@@ -6,9 +6,9 @@ import { StyleSheet, Text, View, Dimensions, Button, FlatList, SafeAreaView, Tou
 
 const window = Dimensions.get("window");
 
-const Item = ({ item }) => (
+const Item = ({ item, num }) => (
     <TouchableOpacity style={styles.item}>
-      <Text style={[styles.title, styles.bold]}>{"#"+"num"+": "+ item.userName}</Text>
+      <Text style={[styles.title, styles.bold]}>{"#"+num+": "+ item.userName}</Text>
       <Text style={styles.title}>
         Puntaje: {item.totalPoints === null ? "Sin Puntaje" : item.totalPoints} 
         {"\n"}
@@ -34,9 +34,20 @@ export default function Ranking ({ navigation }) {
   }, [reload]);
 
   const renderItem = ({ item }) => {
+    var idNum = 0;
+
+    //obtener la posicion del ranking
+    for (let i = 0; i < users.length; i++) {
+      if(users[i].id === item.id){
+        idNum = i;
+        break;
+      }
+    }
+
     return (
       <Item
         item={item}
+        num={idNum+1}
       />
     );
   };
