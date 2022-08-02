@@ -4,7 +4,7 @@ import { Share, View, Button } from 'react-native';
 const SocialSharing = async (link) => {
     try {
       const result = await Share.share({
-        message: link,
+        message: "Hola, El codigo de acceso del rooms es: "+link,
       });
       if (result.action === Share.sharedAction) {
         if (result.activityType) {

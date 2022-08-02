@@ -29,7 +29,7 @@ export default function Register({ navigation }) {
       let getuser = await AsyncStorage.getItem('User');
 
       if(JSON.parse(getuser) !== null){
-        navigation.navigate('Menu');
+        navigation.navigate('Menu', {rr: Math.random() * (999999 - 0) + 0});
       }
     }
     getUser();
@@ -108,7 +108,7 @@ export default function Register({ navigation }) {
       );
 
       setModalVisible(!modalVisible);
-    navigation.navigate('Menu');
+      navigation.navigate('Menu', {rr: Math.random() * (999999 - 0) + 0});
 
     } else {
       alert('El codigo es incorrecto');

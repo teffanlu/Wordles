@@ -75,7 +75,7 @@ export default function Profile({ navigation }) {
         <View style={styles.boton}>
           <Button
             title="Volver al menu"
-            onPress={() => navigation.navigate('Menu')}
+            onPress={() => navigation.navigate('Menu', {rr: Math.random() * (999999 - 0) + 0})}
           />
         </View>
         <View style={styles.boton}>

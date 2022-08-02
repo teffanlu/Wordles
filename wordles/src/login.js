@@ -45,7 +45,7 @@ export default function Login({ navigation }) {
 
     setUserName('');
     setPassword('');
-    navigation.navigate('Menu');
+    navigation.navigate('Menu', {rr: Math.random() * (999999 - 0) + 0});
   }
 
   return (

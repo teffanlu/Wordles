@@ -3,8 +3,9 @@ import axios from "axios";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StyleSheet, Text, View, SafeAreaView, TextInput, Dimensions, Button } from 'react-native';
+import SocialSharing from "./utils/sharing";
 
-const window = Dimensions.get("window");
+const windowd = Dimensions.get("window");
 
 export default function CreateRoom({ navigation, route }) {
 
@@ -115,6 +116,7 @@ export default function CreateRoom({ navigation, route }) {
       });
       console.log(response.data[0]);
       alert("Room actualizado exitosamente");
+      navigation.navigate('Menu', {rr: Math.random() * (999999 - 0) + 0});
     }
   }
 
@@ -125,6 +127,7 @@ export default function CreateRoom({ navigation, route }) {
     setLimitTime("1");
     await axios.delete('https://wordles-server.herokuapp.com/api/info/room/'+wordId);
     alert("Room eliminado exitosamente");
+    navigation.navigate('Menu', {rr: Math.random() * (999999 - 0) + 0});
   }
 
   return (
@@ -171,6 +174,12 @@ export default function CreateRoom({ navigation, route }) {
       <View style={styles.br}></View>
       { wordId !== 0 ?
       <View>
+          <Text>Codigo de room: {' '+wordId}</Text>
+          <Button
+            title="Compartir"
+            onPress={() => SocialSharing(wordId)}
+          />
+          <View style={styles.br}></View>
           <Button
             title="Actualizar"
             onPress={() => updateWord()}
@@ -201,7 +210,7 @@ const styles = StyleSheet.create({
         paddingTop: 100
     },
     input: {
-      width: window.width*0.5,
+      width: windowd.width*0.5,
       height: 40,
       margin: 12,
       marginLeft: 0,

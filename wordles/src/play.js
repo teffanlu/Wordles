@@ -4,9 +4,8 @@ import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StyleSheet, Text, View, SafeAreaView, TextInput, Dimensions, Button } from 'react-native';
 
-const window = Dimensions.get("window");
-
-export default function Play({ navigation }) {
+var flag = false;
+export default function Play({ navigation, route }) {
 
   const [text, onChangeText] = useState("");
   const [length, setLength] = useState('');
@@ -19,6 +18,9 @@ export default function Play({ navigation }) {
   const [timer, setTimer] = useState('00:00');
   const [wordCorrect, setWordCorrect] = useState(0);
   const [end, setEnd] = useState(false);
+  const [bad, setbad] = useState(false);
+  const [SearchWord, setSearchWord] = useState(route.params.Search);
+  const [flagLeave, setflagLeave] = useState(false);
 
   var id = null;
 
@@ -66,15 +68,23 @@ export default function Play({ navigation }) {
       setUser(JSON.parse(getuser));
       uId = JSON.parse(getuser).id;
 
-      var rooms = await axios.get('https://wordles-server.herokuapp.com/api/info/rooms');
+      var unplayedWords = [];
+      var rooms = [];
+
+      if(SearchWord === 0){
+        rooms = await axios.get('https://wordles-server.herokuapp.com/api/info/rooms');
+        //Identificar cuales palabras no se han jugado para guardarlas en una lista y luego elegir una aleatoria
+        unplayedWords = rooms.data;
+      }else{
+        rooms = await axios.get('https://wordles-server.herokuapp.com/api/info/room/'+SearchWord);
+        //lista con solo la palabra buscada por codigo
+        unplayedWords = rooms.data;
+      }
 
       var statistics = await axios.post('https://wordles-server.herokuapp.com/api/info/statistics', {
         gamer_id: JSON.parse(getuser).id
       });
       console.log(JSON.parse(getuser).id, statistics.data);
-
-      //Identificar cuales palabras no se han jugado para guardarlas en una lista y luego elegir una aleatoria
-      var unplayedWords = rooms.data;
 
         for (let i = 0; i < statistics.data.length; i++) {
           
@@ -88,8 +98,14 @@ export default function Play({ navigation }) {
         }
 
       if(unplayedWords.length === 0){
-        alert("Ya ha jugado todos los rooms, intentelo mas tarde");
-        navigation.navigate('Menu');
+        if(SearchWord === 0){
+          alert("Ya ha jugado todos los rooms, intentelo mas tarde");
+        }else{
+          alert("Ya ha jugado Este Room y no puede repetirlo, o no existe");
+        }
+        flag = true;
+        setflagLeave(true);
+        navigation.navigate('Menu', {rr: Math.random() * (999999 - 0) + 0});
       }else{
 
       //Obtener un indice de array aleatorio
@@ -112,30 +128,98 @@ export default function Play({ navigation }) {
     //componentWillUnmount
     return () => { 
 
-      alert('Fue asignado cero puntos a este Room, por abandono');
-      forcedFinish(0);
+      console.log(flag, flagLeave);
+      clearInterval(id);
+
+      let comprob = false;
+      if(flag || flagLeave){
+        comprob = true;
+        flag = false;
+        setflagLeave(false);
+      }
+  
+      if(!comprob){
+        flag = false;
+        alert('Fue asignado cero puntos a este Room, por abandono');
+        forcedFinish(0);
+      }
 
     }
 
   }, [reload]);
 
+  async function scoreGamer(correct){
+
+    var totalPoints = 0, currentStreak = 0, winStreak = 0;
+    let timerNow = timer;
+    let time = timerNow.split(':');
+    let minutes = parseInt(time[0]);
+
+    // longitud de la palabra al cuadradro + minutos+1*10 - intentos+1*10 + letras acertadas*2
+    totalPoints = length.length*length.length + (minutes + 1) * 10 - (count+1) * 10 + wordCorrect * 2;
+
+    if(correct){
+      alert('Tu puntaje en este room fue: '+ totalPoints);
+      totalPoints = parseInt(user.totalPoints) + totalPoints;
+  
+      currentStreak = parseInt(user.currentStreak) + 1;
+  
+      if(currentStreak > parseInt(user.winStreak)){
+        winStreak = currentStreak;
+      }else{
+        winStreak = user.winStreak;
+      }  
+    }else {
+      totalPoints = user.totalPoints;
+      currentStreak = 0;
+      winStreak = user.winStreak;  
+    }
+
+    console.log(user.id, totalPoints, currentStreak, winStreak);
+    var score = await axios.put('https://wordles-server.herokuapp.com/api/users/statisticGamer/'+user.id, {
+      totalPoints, 
+      currentStreak, 
+      winStreak
+    });
+    console.log(score.data[0]);
+
+    flag = true;
+    setflagLeave(true);
+    navigation.navigate('Menu', {rr: Math.random() * (999999 - 0) + 0});
+  }
+
   async function forcedFinish(r) {  
 
     setEnd(false);
-    clearInterval(id);
+  
+    var wLimitTime = wId.limitTime + ':00';
+    var wii = wId.id;
+    var idGamer = uId;
 
-    console.log(wId.limitTime + ':00', count+1, wId.id, uId);
+    if(r === 1) {
+      wLimitTime = '00:00';
+      wii = wordd.id;
+      idGamer = user.id;
+    }
+
+    console.log(wLimitTime, count+1, wii, idGamer);
     var statistics = await axios.post('https://wordles-server.herokuapp.com/api/info/createStatistic', {
       totalPoints: 0, 
-      totalTime: wId.limitTime + ':00', 
+      totalTime: wLimitTime, 
       totalTurns: count+1, 
-      word_id: wId.id, 
-      gamer_id: uId
+      word_id: wii, 
+      gamer_id: idGamer
     });
     console.log(statistics);
 
-    if(r === 1)
-      setreload(!reload);
+    if(r === 1) {
+      if(bad === true){
+        scoreGamer(false);
+      } else {
+        scoreGamer(true); 
+      }        
+    }
+    if(r === 0) scoreGamer(false);
   }
 
   function startTimer(Inictime) {
@@ -147,7 +231,7 @@ export default function Play({ navigation }) {
       console.log(minutes, seconds);
 
       //ciclo infinito
-      let condition = false;
+      var condition = false;
       do {
         id = setInterval(() => {
           if(!condition){
@@ -163,9 +247,10 @@ export default function Play({ navigation }) {
               }
               if(minutes === 0){
                 if(seconds === 0){
+                  condition = true;
+                  setbad(true);
                   setEnd(true);
                   alert("Tiempo agotado");
-                  condition = true;
                   return 0;
                 }
               }
@@ -185,6 +270,7 @@ export default function Play({ navigation }) {
 
     if(parseInt(wordd.turns) == count+1){
       alert('Ya no hay mas intentos');
+      setbad(true);
       setEnd(true);
     }
 
@@ -226,7 +312,7 @@ export default function Play({ navigation }) {
     //Juego terminado satisfactoriamente
     if(textString.toUpperCase() === length.toUpperCase()){
       alert("Correcto!!!");
-      setEnd(true);
+      setbad(false);
       postResult();
     }
 
@@ -291,13 +377,15 @@ export default function Play({ navigation }) {
     });
     console.log(statistics.data);
 
-    alert('Tu puntaje en este room fue: '+ totalPoints);
-
+    scoreGamer(true);
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.marginB}><Text>{timer}</Text></View>
+      <View style={styles.marginB}>
+        <Text>Codigo de room: {' '+wordd.id}</Text>
+        <Text  style={styles.textTime}>{timer}</Text>
+      </View>
 
       <SafeAreaView>
         <View style={[styles.row, styles.marginB]}>
@@ -360,6 +448,12 @@ const styles = StyleSheet.create({
     input: {
       height: 40,
       width: 40,
+      margin: 0,
+      borderWidth: 1,
+      padding: 6,
+      textAlign: "center",
+    },
+    textTime: {
       margin: 0,
       borderWidth: 1,
       padding: 6,
