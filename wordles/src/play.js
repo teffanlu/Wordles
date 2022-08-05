@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { StyleSheet, Text, View, SafeAreaView, TextInput, Dimensions, Button } from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, TextInput, Dimensions, Button, Alert } from 'react-native';
 
 var flag = false;
 export default function Play({ navigation, route }) {
@@ -18,7 +18,6 @@ export default function Play({ navigation, route }) {
   const [timer, setTimer] = useState('00:00');
   const [wordCorrect, setWordCorrect] = useState(0);
   const [end, setEnd] = useState(false);
-  const [bad, setbad] = useState(false);
   const [SearchWord, setSearchWord] = useState(route.params.Search);
   const [flagLeave, setflagLeave] = useState(false);
 
@@ -27,6 +26,7 @@ export default function Play({ navigation, route }) {
   //wordId and userId
   var wId = 0;
   var uId = 0;
+  var showCount;
 
   var arrayTurns = [];
   var abc = [
@@ -157,9 +157,28 @@ export default function Play({ navigation, route }) {
 
     // longitud de la palabra al cuadradro + minutos+1*10 - intentos+1*10 + letras acertadas*2
     totalPoints = length.length*length.length + (minutes + 1) * 10 - (count+1) * 10 + wordCorrect * 2;
+    var showPoint = totalPoints;
+
+    var wordText = length;
+    if(wId.word){
+      wordText = wId.word;
+    }
+
+    if(!showCount){
+      showCount = count+1;
+    }
 
     if(correct){
-      alert('Tu puntaje en este room fue: '+ totalPoints);
+      Alert.alert(
+        "Resultado",
+        "La palabra fue: "+wordText+"\n"
+        +"Tu puntaje fue: "+showPoint+"\n"
+        +"Tiempo restante: "+timerNow+"\n"
+        +"Numero de intentos: "+showCount+"\n",
+        [
+          { text: "OK", onPress: () => console.log("OK Pressed") }
+        ]
+      );
       totalPoints = parseInt(user.totalPoints) + totalPoints;
   
       currentStreak = parseInt(user.currentStreak) + 1;
@@ -173,6 +192,14 @@ export default function Play({ navigation, route }) {
       totalPoints = user.totalPoints;
       currentStreak = 0;
       winStreak = user.winStreak;  
+
+      Alert.alert(
+        "Resultado",
+        "La palabra fue: "+wordText+"\n",
+        [
+          { text: "OK", onPress: () => console.log("OK Pressed") }
+        ]
+      );
     }
 
     console.log(user.id, totalPoints, currentStreak, winStreak);
@@ -212,14 +239,7 @@ export default function Play({ navigation, route }) {
     });
     console.log(statistics);
 
-    if(r === 1) {
-      if(bad === true){
-        scoreGamer(false);
-      } else {
-        scoreGamer(true); 
-      }        
-    }
-    if(r === 0) scoreGamer(false);
+    scoreGamer(false);
   }
 
   function startTimer(Inictime) {
@@ -248,9 +268,9 @@ export default function Play({ navigation, route }) {
               if(minutes === 0){
                 if(seconds === 0){
                   condition = true;
-                  setbad(true);
                   setEnd(true);
-                  alert("Tiempo agotado");
+                  alert("Tiempo agotado\n"+"La palabra era: "+length);
+                  forcedFinish(1)
                   return 0;
                 }
               }
@@ -269,9 +289,9 @@ export default function Play({ navigation, route }) {
   async function onfinish () {
 
     if(parseInt(wordd.turns) == count+1){
-      alert('Ya no hay mas intentos');
-      setbad(true);
+      alert("Ya no hay mas intentos\n"+"La palabra era: "+length);
       setEnd(true);
+      forcedFinish(1);
     }
 
     //Obtengo todos los caracteres tecleados despues de la palabra buscada
@@ -312,7 +332,6 @@ export default function Play({ navigation, route }) {
     //Juego terminado satisfactoriamente
     if(textString.toUpperCase() === length.toUpperCase()){
       alert("Correcto!!!");
-      setbad(false);
       postResult();
     }
 
@@ -352,6 +371,7 @@ export default function Play({ navigation, route }) {
     }
 
     setCount(count + 1);
+    showCount = count + 1;
     setArray(abc);
     setTurns([arrayTurns, ...turns]);
 
@@ -365,8 +385,6 @@ export default function Play({ navigation, route }) {
 
     // longitud de la palabra al cuadradro + minutos+1*10 - intentos+1*10 + letras acertadas*2
     let totalPoints = length.length*length.length + (minutes + 1) * 10 - (count+1) * 10 + wordCorrect * 2;
-
-    console.log(totalPoints, timerNow, count+1, wordd.id, user.id);
 
     var statistics = await axios.post('https://wordles-server.herokuapp.com/api/info/createStatistic', {
       totalPoints, 
@@ -404,7 +422,7 @@ export default function Play({ navigation, route }) {
     { end ?
       <Button
         title="Siguiente"
-        onPress={() => forcedFinish(1)}
+        onPress={() => /*forcedFinish(1)*/ console.log('Procesando, Por favor espere')}
       />
       :
       <Button

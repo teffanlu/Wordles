@@ -1,10 +1,10 @@
 {
   "devToolsPort": 19002,
-  "expoServerPort": 19000,
+  "expoServerPort": null,
   "packagerPort": 19000,
-  "expoServerNgrokUrl": "https://k2-g8q.anonymous.wordles.exp.direct",
-  "packagerNgrokUrl": "https://k2-g8q.anonymous.wordles.exp.direct",
-  "ngrokPid": 8788,
+  "expoServerNgrokUrl": "https://k2-g8q.teffanlu.wordles.exp.direct",
+  "packagerNgrokUrl": "https://k2-g8q.teffanlu.wordles.exp.direct",
+  "ngrokPid": 20760,
   "packagerPid": null,
   "webpackServerPort": 19006
 }
